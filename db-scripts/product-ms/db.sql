@@ -26,4 +26,12 @@ Enfin, Configuration Server pour centraliser la gestion des configurations, ce q
 
 
 
+docker exec -it product-service sh
+get token from keycloack
+curl -X POST "http://keycloak:8080/realms/microservices-realm/protocol/openid-connect/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "client_id=api-gateway" \
+  -d "grant_type=password" \
+  -d "username=amal.masghouni@value.com.tn" \
+  -d "password=user123"
 

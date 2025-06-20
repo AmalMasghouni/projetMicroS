@@ -11,6 +11,18 @@ services:
     networks:
       - ms-network
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    container_name: keycloak
+    ports:
+      - "8180:8080"
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    command: start-dev
+    networks:
+      - ms-network
+
   product-service:
     container_name: product-service
     build: .
@@ -23,10 +35,10 @@ services:
       - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/product-service
       - JAVA_TOOL_OPTIONS=-Deureka.client.service-url.defaultZone=http://discovery-server:8761/eureka/
       - SPRING_CLOUD_CONFIG_URI=http://host.docker.internal:8888
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://host.docker.internal:8180/realms/microservices-realm
-
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/microservices-realm
     depends_on:
       - mongodb
+      - keycloak
     networks:
       - ms-network
 
