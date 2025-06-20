@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  discovery-server:
+    container_name: discovery-server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8761:8761"
+    networks:
+      - ms-network
+
+networks:
+  ms-network:
+    external: true
+

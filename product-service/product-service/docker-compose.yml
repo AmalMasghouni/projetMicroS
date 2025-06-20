@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - ms-network
+
+  product-service:
+    container_name: product-service
+    build: .
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=default
+      - SPRING_APPLICATION_NAME=product-service
+      - SERVER_PORT=8082
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/product-service
+      - JAVA_TOOL_OPTIONS=-Deureka.client.service-url.defaultZone=http://discovery-server:8761/eureka/
+      - SPRING_CLOUD_CONFIG_URI=http://host.docker.internal:8888
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://host.docker.internal:8180/realms/microservices-realm
+
+    depends_on:
+      - mongodb
+    networks:
+      - ms-network
+
+volumes:
+  mongo-data:
+
+networks:
+  ms-network:
+    external: true

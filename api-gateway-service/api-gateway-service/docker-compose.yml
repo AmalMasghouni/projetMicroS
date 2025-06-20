@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  api-gateway:
+    container_name: api-gateway
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8080"   # exposer port 8080 du container sur 8083 local
+    environment:
+      - SPRING_PROFILES_ACTIVE=default
+      - SPRING_APPLICATION_NAME=api-gateway
+      - JAVA_TOOL_OPTIONS=-Deureka.client.service-url.defaultZone=http://discovery-server:8761/eureka/
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://host.docker.internal:8180/realms/microservices-realm
+    networks:
+      - ms-network
+
+networks:
+  ms-network:
+    external: true
+
