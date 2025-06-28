@@ -11,6 +11,7 @@
         <option value="$PROJECT_DIR$/api-gateway-service/api-gateway-service/pom.xml" />
         <option value="$PROJECT_DIR$/configuration-server/configuration-server/pom.xml" />
         <option value="$PROJECT_DIR$/notification-service/notification-service/pom.xml" />
+        <option value="$PROJECT_DIR$/pom.xml" />
       </list>
     </option>
     <option name="workspaceImportForciblyTurnedOn" value="true" />

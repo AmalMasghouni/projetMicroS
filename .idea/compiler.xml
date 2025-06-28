@@ -9,10 +9,10 @@
         <outputRelativeToContentRoot value="true" />
         <module name="discovery-server" />
         <module name="inventory-service" />
-        <module name="api-gateway-service" />
-        <module name="configuration-server" />
         <module name="order-service" />
+        <module name="api-gateway-service" />
         <module name="notification-service" />
+        <module name="configuration-server" />
       </profile>
       <profile name="Annotation profile for product-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -31,7 +31,7 @@
       <module name="configuration-server" options="-parameters" />
       <module name="discovery-server" options="-parameters" />
       <module name="inventory-service" options="-parameters" />
-      <module name="notification-service" options="-parameters" />
+      <module name="notification-service" options="-parameters --add-exports jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED" />
       <module name="order-service" options="-parameters" />
       <module name="product-service" options="-parameters" />
     </option>

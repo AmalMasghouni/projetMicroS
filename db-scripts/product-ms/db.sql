@@ -35,3 +35,46 @@ curl -X POST "http://keycloak:8080/realms/microservices-realm/protocol/openid-co
   -d "username=amal.masghouni@value.com.tn" \
   -d "password=user123"
 
+
+Voici le fichier app.js complet corrigé pour permettre au review-service de communiquer avec le product-service sécurisé par Keycloak, en utilisant le flux client_credentials.
+
+✅ Étape 1 – Configuration dans Keycloak
+Connecte-toi à Keycloak (http://localhost:8180) :
+
+🎯 Dans le realm microservices-realm :
+Va dans Clients → Créer un client
+
+Remplis :
+
+Client ID : internal-client
+
+Client authentication : ✅ activé
+
+Client type : Confidential
+
+Root URL : tu peux laisser vide
+→ Enregistrer
+
+Dans l’onglet "Paramètres" :
+
+Enabled ✅
+
+Standard Flow ❌
+
+Direct Access Grants ❌
+
+Service Accounts ✅ (coché)
+→ Enregistrer
+Paramètre	Valeur à mettre
+Client ID	internal-client (ou autre)
+Client type	Confidential
+Client authentication	✅ On
+Authorization	❌ Off (désactive le fine-grained auth)
+Authentication flow
+🔹 Standard flow (code)	❌ Désactivé
+🔹 Implicit flow	❌ Désactivé
+🔹 Direct access grants	❌ Désactivé
+🔹 OAuth 2.0 Device Grant	❌ Désactivé (pas utile ici)
+🔹 OIDC CIBA Grant	❌ Désactivé (inutile ici)
+🔹 Service accounts roles	✅ Activé (c'est ce qu'on veut)
+
