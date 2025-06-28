@@ -1,6 +1,7 @@
 package com.programming.techie.productservice;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -12,7 +13,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(HttpSecurity security) throws Exception {
-        security.authorizeRequests(authorize -> authorize.anyRequest().authenticated())
+        security.authorizeRequests(authorize -> authorize
+                        .antMatchers(HttpMethod.GET, "/api/product/**").permitAll()
+                        .anyRequest().authenticated())
                 .oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt);
     }
 
