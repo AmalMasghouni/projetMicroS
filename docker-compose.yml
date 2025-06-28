@@ -81,6 +81,20 @@ services:
       - keycloak
     networks:
       - ms-network
+  review-service:
+    build: ./review-service/review-service
+    container_name: review-service
+    ports:
+      - "3002:3002"
+    environment:
+      - PRODUCT_SERVICE_HOST=product-service
+      - PRODUCT_SERVICE_PORT=8081
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+    networks:
+      - ms-network
+    depends_on:
+      - product-service
+
 
   inventory-service:
     build: ./inventory-service/inventory-service
