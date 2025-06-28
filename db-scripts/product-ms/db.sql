@@ -35,3 +35,6 @@ curl -X POST "http://keycloak:8080/realms/microservices-realm/protocol/openid-co
   -d "username=amal.masghouni@value.com.tn" \
   -d "password=user123"
 
+
+
+
