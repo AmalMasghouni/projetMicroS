@@ -162,6 +162,20 @@ services:
       - keycloak
     networks:
       - ms-network
+  chat-service:
+    build: ./chat-service/chat-service            # adapte le chemin si besoin
+    container_name: chat-service
+    ports:
+      - "8089:8089"
+    environment:
+      - SPRING_APPLICATION_NAME=chat-service
+      - SERVER_PORT=8089
+      - JAVA_TOOL_OPTIONS=-Deureka.client.service-url.defaultZone=http://discovery-server:8761/eureka/
+      # Ajoute ici d'autres variables (DB, RabbitMQ, etc.) si ton chat‑service en a besoin
+    depends_on:
+      - discovery-server
+    networks:
+      - ms-network
 
   notification-service:
     build: ./notification-service/notification-service
