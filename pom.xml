@@ -18,6 +18,7 @@
 		<module>discovery-server/discovery-server</module>
 		<module>api-gateway-service/api-gateway-service</module>
 		<module>notification-service/notification-service</module>
+		<module>keycloak-service/keycloak</module>
 	</modules>
 
 	<properties>

@@ -62,7 +62,21 @@ services:
       - "8761:8761"
     networks:
       - ms-network
-
+  keycloak-service:
+    build: ./keycloak-service/keycloak
+    container_name: keycloak-service
+    ports:
+      - "8088:8088"
+    environment:
+      - SERVER_PORT=8088
+      - SPRING_PROFILES_ACTIVE=default
+      - JAVA_TOOL_OPTIONS=-Deureka.client.service-url.defaultZone=http://discovery-server:8761/eureka/
+      - SPRING_CLOUD_VAULT_ENABLED=false
+    depends_on:
+      - discovery-server
+      - keycloak
+    networks:
+      - ms-network
   product-service:
     build: ./product-service/product-service
     container_name: product-service
@@ -72,7 +86,7 @@ services:
       - SERVER_PORT=8081
       - SPRING_PROFILES_ACTIVE=default
       - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/product-service
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/microservices-realm
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/Authentication
       - JAVA_TOOL_OPTIONS=-Deureka.client.service-url.defaultZone=http://discovery-server:8761/eureka/
       - SPRING_CLOUD_VAULT_ENABLED=false
     depends_on:
@@ -112,7 +126,7 @@ services:
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_RABBITMQ_USERNAME=guest
       - SPRING_RABBITMQ_PASSWORD=guest
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/microservices-realm
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/Authentication
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=*
       - SPRING_CLOUD_VAULT_ENABLED=false
     depends_on:
@@ -139,7 +153,7 @@ services:
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_RABBITMQ_USERNAME=guest
       - SPRING_RABBITMQ_PASSWORD=guest
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/microservices-realm
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/Authentication
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=*
     depends_on:
       - mysql-db
@@ -162,7 +176,7 @@ services:
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_RABBITMQ_USERNAME=guest
       - SPRING_RABBITMQ_PASSWORD=guest
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/microservices-realm
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/Authentication
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=*
     depends_on:
       - rabbitmq
@@ -177,7 +191,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/microservices-realm
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/Authentication
       - JAVA_TOOL_OPTIONS=-Deureka.client.service-url.defaultZone=http://discovery-server:8761/eureka/
     depends_on:
       - discovery-server
