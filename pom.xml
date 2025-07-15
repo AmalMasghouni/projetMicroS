@@ -19,6 +19,8 @@
 		<module>api-gateway-service/api-gateway-service</module>
 		<module>notification-service/notification-service</module>
 		<module>keycloak-service/keycloak</module>
+		<module>chat-service/chat-service</module>
+		<module>user-profile-service/user-profile-service</module>
 	</modules>
 
 	<properties>

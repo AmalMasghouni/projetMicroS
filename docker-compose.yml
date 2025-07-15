@@ -92,9 +92,28 @@ services:
     depends_on:
       - mongodb
       - discovery-server
-      - keycloak
+      - user-profile-service
     networks:
       - ms-network
+  user-profile-service:
+      build: ./user-profile-service/user-profile-service
+      container_name: user-profile-service
+      ports:
+        - "8091:8091"
+      environment:
+        - SERVER_PORT=8091
+        - SPRING_PROFILES_ACTIVE=default
+        - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/user_profile_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+        - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/Authentication
+        - JAVA_TOOL_OPTIONS=-Deureka.client.service-url.defaultZone=http://discovery-server:8761/eureka/
+        - SPRING_CLOUD_VAULT_ENABLED=false
+      depends_on:
+        - mysql-db
+        - discovery-server
+        - keycloak-service
+      networks:
+        - ms-network
+
   review-service:
     build: ./review-service/review-service
     container_name: review-service
@@ -108,6 +127,7 @@ services:
       - ms-network
     depends_on:
       - product-service
+      - user-profile-service
 
 
   inventory-service:
@@ -133,7 +153,7 @@ services:
       - mysql-db
       - rabbitmq
       - discovery-server
-      - keycloak
+      - user-profile-service
     networks:
       - ms-network
 
@@ -159,7 +179,7 @@ services:
       - mysql-db
       - rabbitmq
       - discovery-server
-      - keycloak
+      - user-profile-service
     networks:
       - ms-network
   chat-service:
@@ -174,6 +194,7 @@ services:
       # Ajoute ici d'autres variables (DB, RabbitMQ, etc.) si ton chat‑service en a besoin
     depends_on:
       - discovery-server
+      - user-profile-service
     networks:
       - ms-network
 
@@ -195,7 +216,7 @@ services:
     depends_on:
       - rabbitmq
       - discovery-server
-      - keycloak
+      - user-profile-service
     networks:
       - ms-network
 
@@ -209,6 +230,7 @@ services:
       - JAVA_TOOL_OPTIONS=-Deureka.client.service-url.defaultZone=http://discovery-server:8761/eureka/
     depends_on:
       - discovery-server
+      - keycloak-service
       - keycloak
     networks:
       - ms-network

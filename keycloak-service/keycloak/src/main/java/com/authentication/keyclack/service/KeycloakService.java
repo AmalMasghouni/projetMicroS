@@ -9,11 +9,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
@@ -21,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class KeycloakService {
 
@@ -29,31 +32,34 @@ public class KeycloakService {
 
 
     public ResponseEntity<?> login(LoginRequest request) throws JsonProcessingException {
-        if (!userExists(request.getUsername())) {
-            return ResponseEntity.status(404).body("{\"error\": \"User not found\"}");
-        }
         String tokenUrl = config.getUrl() + "/realms/" + config.getRealm() + "/protocol/openid-connect/token";
-
+        log.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA "+tokenUrl);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type", "password");
-        body.add("client_id", config.getClientId());
+            body.add("client_id", config.getClientId());
         body.add("client_secret", config.getClientSecret());
         body.add("username", request.getUsername());
         body.add("password", request.getPassword());
+        body.add("scope","openid");
 
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(body, headers);
 
         try {
+            log.info("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC");
             ResponseEntity<String> response = restTemplate.postForEntity(tokenUrl, entity, String.class);
             return ResponseEntity.ok(new ObjectMapper().readTree(response.getBody()));
         } catch (HttpClientErrorException e) {
-            System.out.println(e.getMessage());
+            log.info("BBBBBBBBBBBBBBBBBBBBBBBBBBB"+e.getMessage()+" "+e.getResponseBodyAsString());
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
-        }
+        } catch (RestClientException e) {
+        log.error("RestClientException occurred", e);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Keycloak server error");
     }
+
+}
 
     private String getAdminAccessToken() throws JsonProcessingException {
         String tokenUrl = config.getUrl() + "/realms/" + config.getRealm() + "/protocol/openid-connect/token";
@@ -135,7 +141,7 @@ public class KeycloakService {
             ResponseEntity<JsonNode> tokenResponse = restTemplate.postForEntity(tokenUrl, tokenRequest, JsonNode.class);
             String token = tokenResponse.getBody().get("access_token").asText();
 
-            // Step 2: Create user
+            // Step 2: Create user in Keycloak
             HttpHeaders userHeaders = new HttpHeaders();
             userHeaders.setContentType(MediaType.APPLICATION_JSON);
             userHeaders.setBearerAuth(token);
@@ -153,13 +159,56 @@ public class KeycloakService {
             )));
 
             HttpEntity<Map<String, Object>> userRequest = new HttpEntity<>(user, userHeaders);
-
             ResponseEntity<String> userResponse = restTemplate.postForEntity(userUrl, userRequest, String.class);
-            return ResponseEntity.status(userResponse.getStatusCode()).body("User created");
+
+            if (!userResponse.getStatusCode().is2xxSuccessful()) {
+                return ResponseEntity.status(userResponse.getStatusCode()).body("Failed to create Keycloak user.");
+            }
+
+            // Step 3: Fetch created user from Keycloak to get ID
+            String getUsersUrl = userUrl + "?username=" + request.getUsername();
+            ResponseEntity<JsonNode> getUsersResponse = restTemplate.exchange(
+                    getUsersUrl,
+                    HttpMethod.GET,
+                    new HttpEntity<>(userHeaders),
+                    JsonNode.class
+            );
+
+            JsonNode userList = getUsersResponse.getBody();
+            if (userList == null || !userList.isArray() || userList.size() == 0) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("User created but ID not found.");
+            }
+
+            String keycloakId = userList.get(0).get("id").asText();
+
+            // Step 4: Send data to UserProfile MS
+            String userProfileUrl = "http://user-profile-ms:8091/api/user/create"; // adjust if needed
+            HttpHeaders profileHeaders = new HttpHeaders();
+            profileHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+            Map<String, Object> profilePayload = new HashMap<>();
+            profilePayload.put("id", keycloakId);
+            profilePayload.put("username", request.getUsername());
+            profilePayload.put("email", request.getEmail());
+            profilePayload.put("firstName", request.getFirstName());
+            profilePayload.put("lastName", request.getLastName());
+
+            HttpEntity<Map<String, Object>> profileRequest = new HttpEntity<>(profilePayload, profileHeaders);
+            ResponseEntity<String> profileResponse = restTemplate.postForEntity(userProfileUrl, profileRequest, String.class);
+
+            if (!profileResponse.getStatusCode().is2xxSuccessful()) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("Keycloak user created, but failed to sync with UserProfile service.");
+            }
+
+            return ResponseEntity.status(HttpStatus.CREATED).body("User created successfully");
 
         } catch (HttpClientErrorException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error: " + e.getMessage());
         }
     }
+
 }
 
