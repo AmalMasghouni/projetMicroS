@@ -16,8 +16,8 @@ import java.math.BigDecimal;
 public class UserProfile {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private String externalId;
-    private String id;
     private String firstName;
     private String lastName;
     private String email;

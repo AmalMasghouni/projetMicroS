@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.sleuth.instrument.async.TraceableExecutorService;
@@ -19,6 +20,7 @@ import java.util.concurrent.Executors;
 @EnableEurekaClient
 @EnableFeignClients
 @RequiredArgsConstructor
+@EntityScan("com.programming.techie.userProfileService.model")
 public class UserProfileService {
 
     private final BeanFactory beanFactory;

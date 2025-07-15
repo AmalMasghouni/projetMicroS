@@ -126,7 +126,6 @@ public class KeycloakService {
         String tokenUrl = config.getUrl() + "/realms/" + config.getRealm() + "/protocol/openid-connect/token";
         String userUrl = config.getUrl() + "/admin/realms/" + config.getRealm() + "/users";
 
-        // Step 1: Get admin token using client_credentials
         HttpHeaders tokenHeaders = new HttpHeaders();
         tokenHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
@@ -138,6 +137,7 @@ public class KeycloakService {
         HttpEntity<MultiValueMap<String, String>> tokenRequest = new HttpEntity<>(tokenBody, tokenHeaders);
 
         try {
+            // Step 1: Get admin token
             ResponseEntity<JsonNode> tokenResponse = restTemplate.postForEntity(tokenUrl, tokenRequest, JsonNode.class);
             String token = tokenResponse.getBody().get("access_token").asText();
 
@@ -150,6 +150,7 @@ public class KeycloakService {
             user.put("username", request.getUsername());
             user.put("email", request.getEmail());
             user.put("enabled", true);
+            user.put("emailVerified", true); // ✅ Mark email as verified
             user.put("firstName", request.getFirstName());
             user.put("lastName", request.getLastName());
             user.put("credentials", List.of(Map.of(
@@ -165,7 +166,7 @@ public class KeycloakService {
                 return ResponseEntity.status(userResponse.getStatusCode()).body("Failed to create Keycloak user.");
             }
 
-            // Step 3: Fetch created user from Keycloak to get ID
+            // Step 3: Get user ID from Keycloak
             String getUsersUrl = userUrl + "?username=" + request.getUsername();
             ResponseEntity<JsonNode> getUsersResponse = restTemplate.exchange(
                     getUsersUrl,
@@ -181,14 +182,16 @@ public class KeycloakService {
 
             String keycloakId = userList.get(0).get("id").asText();
 
-            // Step 4: Send data to UserProfile MS
-            String userProfileUrl = "http://user-profile-ms:8091/api/user/create"; // adjust if needed
+            // Step 4: Send user profile to UserProfile MS
+            String userProfileUrl = "http://user-profile-service:8091/api/user/create";
+
             HttpHeaders profileHeaders = new HttpHeaders();
             profileHeaders.setContentType(MediaType.APPLICATION_JSON);
+            profileHeaders.setBearerAuth(token);
 
             Map<String, Object> profilePayload = new HashMap<>();
-            profilePayload.put("id", keycloakId);
-            profilePayload.put("username", request.getUsername());
+            profilePayload.put("externalId", keycloakId);
+            profilePayload.put("birthDate", request.getUsername()); // NOTE: double-check if this is correct
             profilePayload.put("email", request.getEmail());
             profilePayload.put("firstName", request.getFirstName());
             profilePayload.put("lastName", request.getLastName());
@@ -197,8 +200,12 @@ public class KeycloakService {
             ResponseEntity<String> profileResponse = restTemplate.postForEntity(userProfileUrl, profileRequest, String.class);
 
             if (!profileResponse.getStatusCode().is2xxSuccessful()) {
+                // ❌ If UserProfile fails, delete Keycloak user
+                String deleteUrl = userUrl + "/" + keycloakId;
+                restTemplate.exchange(deleteUrl, HttpMethod.DELETE, new HttpEntity<>(userHeaders), Void.class);
+
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("Keycloak user created, but failed to sync with UserProfile service.");
+                        .body("UserProfile API failed. Keycloak user was rolled back.");
             }
 
             return ResponseEntity.status(HttpStatus.CREATED).body("User created successfully");
@@ -209,6 +216,7 @@ public class KeycloakService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error: " + e.getMessage());
         }
     }
+
 
 }
 
