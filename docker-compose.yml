@@ -23,6 +23,8 @@ services:
   mysql-db:
     image: mysql:8.0
     container_name: mysql-db
+    ports:
+      - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: mysql
       MYSQL_DATABASE: inventory-db
@@ -103,7 +105,10 @@ services:
       environment:
         - SERVER_PORT=8091
         - SPRING_PROFILES_ACTIVE=default
-        - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/user_profile_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+        - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/user_profile_db
+        - SPRING_DATASOURCE_USERNAME=root
+        - SPRING_DATASOURCE_PASSWORD=mysql
+        - SPRING_JPA_HIBERNATE_DDL_AUTO=update
         - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/Authentication
         - JAVA_TOOL_OPTIONS=-Deureka.client.service-url.defaultZone=http://discovery-server:8761/eureka/
         - SPRING_CLOUD_VAULT_ENABLED=false
