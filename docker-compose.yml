@@ -32,6 +32,8 @@ services:
       - mysql-data:/var/lib/mysql
     networks:
       - ms-network
+
+
     # pas de ports exposés pour éviter conflit
 
   rabbitmq:
@@ -151,7 +153,7 @@ services:
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_RABBITMQ_USERNAME=guest
       - SPRING_RABBITMQ_PASSWORD=guest
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/Authentication
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8180/realms/Authentication
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=*
       - SPRING_CLOUD_VAULT_ENABLED=false
     depends_on:
@@ -178,7 +180,7 @@ services:
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_RABBITMQ_USERNAME=guest
       - SPRING_RABBITMQ_PASSWORD=guest
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/Authentication
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8180/realms/Authentication
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=*
     depends_on:
       - mysql-db
@@ -187,6 +189,7 @@ services:
       - user-profile-service
     networks:
       - ms-network
+      -
   chat-service:
     build: ./chat-service/chat-service            # adapte le chemin si besoin
     container_name: chat-service
@@ -229,7 +232,7 @@ services:
     build: ./api-gateway-service/api-gateway-service
     container_name: api-gateway-service
     ports:
-      - "8080:8080"
+      - "8090:8080"
     environment:
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/Authentication
       - JAVA_TOOL_OPTIONS=-Deureka.client.service-url.defaultZone=http://discovery-server:8761/eureka/

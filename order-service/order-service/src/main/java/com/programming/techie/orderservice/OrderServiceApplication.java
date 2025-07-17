@@ -33,7 +33,9 @@ public class OrderServiceApplication {
             JwtAuthenticationToken token = (JwtAuthenticationToken) SecurityContextHolder.getContext()
                     .getAuthentication();
 
-            requestTemplate.header("Authorization", "Bearer " + token.getToken().getTokenValue());
+            if (token != null) {
+                requestTemplate.header("Authorization", "Bearer " + token.getToken().getTokenValue());
+            }
         };
     }
 

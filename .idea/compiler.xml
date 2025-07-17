@@ -9,12 +9,13 @@
         <outputRelativeToContentRoot value="true" />
         <module name="discovery-server" />
         <module name="inventory-service" />
-        <module name="order-service" />
         <module name="api-gateway-service" />
-        <module name="notification-service" />
         <module name="configuration-server" />
+        <module name="order-service" />
+        <module name="user-profile-service" />
+        <module name="notification-service" />
       </profile>
-      <profile name="Annotation profile for product-service" enabled="true">
+      <profile name="Annotation profile for microservices-new" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -22,18 +23,32 @@
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.28/lombok-1.18.28.jar" />
         </processorPath>
         <module name="product-service" />
+        <module name="chat-service" />
+      </profile>
+      <profile name="Annotation profile for keyclack" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/springframework/boot/spring-boot-configuration-processor/3.5.0/spring-boot-configuration-processor-3.5.0.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.36/lombok-1.18.36.jar" />
+        </processorPath>
+        <module name="keyclack" />
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="api-gateway-service" options="-parameters" />
+      <module name="chat-service" options="-parameters" />
       <module name="configuration-server" options="-parameters" />
       <module name="discovery-server" options="-parameters" />
       <module name="inventory-service" options="-parameters" />
+      <module name="keyclack" options="-parameters" />
       <module name="notification-service" options="-parameters --add-exports jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED" />
       <module name="order-service" options="-parameters" />
       <module name="product-service" options="-parameters" />
+      <module name="user-profile-service" options="-parameters" />
     </option>
   </component>
 </project>
