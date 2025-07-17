@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.programming.techie.userProfileService.model.UserProfile;
 import com.programming.techie.userProfileService.repository.UserProfileRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.http.HttpStatus;
@@ -13,13 +14,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Base64;
 
-
+@Slf4j
 @RestController
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
 public class UserProfileController {
 
-    private final UserProfileRepository userProfileRepository ;
+    private final UserProfileRepository userProfileRepository;
 
 
     @GetMapping("/me")
@@ -49,15 +50,22 @@ public class UserProfileController {
             }
 
         } catch (Exception e) {
+            log.info(e.toString());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An error occurred while retrieving the user profile.");
         }
     }
 
+    @PutMapping("/update")
+    public void updateUser(@RequestBody UserProfile userProfile) {
+        final UserProfile user = userProfileRepository.findByExternalId(userProfile.getExternalId());
+        userProfile.setId(user.getId());
+        userProfileRepository.save(userProfile);
+    }
 
 
     @PostMapping("/create")
-    public  void createUser(@RequestBody UserProfile userProfile) {
+    public void createUser(@RequestBody UserProfile userProfile) {
         userProfileRepository.save(userProfile);
     }
 

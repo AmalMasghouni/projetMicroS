@@ -3,15 +3,13 @@ package com.authentication.keyclack.controller;
 import com.authentication.keyclack.DTO.LoginRequest;
 import com.authentication.keyclack.DTO.LogoutRequest;
 import com.authentication.keyclack.DTO.RegisterRequest;
+import com.authentication.keyclack.DTO.UpdateRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import com.authentication.keyclack.service.KeycloakService;
 
 import java.util.Map;
@@ -48,6 +46,11 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         return keycloakService.register(request);
+    }
+
+    @PutMapping("/update-profile")
+    public ResponseEntity<?> updateProfile(@RequestBody UpdateRequest request) {
+        return keycloakService.updateUserProfile(request);
     }
 }
 
