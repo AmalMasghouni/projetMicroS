@@ -1,5 +1,7 @@
 package com.programming.techie.productservice.controller;
 
+import com.programming.techie.productservice.feign.NotificationFeignClient;
+import com.programming.techie.productservice.model.Notification;
 import com.programming.techie.productservice.model.Product;
 import com.programming.techie.productservice.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -7,15 +9,21 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/product")
-@RequiredArgsConstructor
+
 public class ProductController {
-
+    public ProductController(ProductRepository productRepository, NotificationFeignClient notificationFeignClient) {
+        this.productRepository = productRepository;
+        this.notificationFeignClient = notificationFeignClient;
+    }
     private final ProductRepository productRepository;
-
+    private final NotificationFeignClient notificationFeignClient;
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<Product> findAll() {
@@ -26,6 +34,11 @@ public class ProductController {
     @ResponseStatus(HttpStatus.CREATED)
     public void createProduct(@RequestBody Product product) {
         productRepository.save(product);
+        Notification notification = new Notification();
+        notification.setDescription(product.getDescription());
+        notification.setTitle(product.getName());
+        notification.setNotificationType("Product Added");
+        this.notificationFeignClient.createNotification(notification);
     }
     @GetMapping("/{id}")
     public ResponseEntity<Product> findById(@PathVariable String id) {
