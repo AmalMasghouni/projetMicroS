@@ -1,0 +1,7 @@
+com\esprit\notificationservice\EmailSender.class
+com\esprit\notificationservice\entities\Notification.class
+com\esprit\notificationservice\NotificationServiceApplication.class
+com\esprit\notificationservice\service\NotificationService.class
+com\esprit\notificationservice\service\NotificationServiceImpl.class
+com\esprit\notificationservice\repository\NotificationRepository.class
+com\esprit\notificationservice\Controller\NotificationController.class

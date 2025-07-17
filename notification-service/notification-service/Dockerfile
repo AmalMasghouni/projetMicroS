@@ -1,14 +1,5 @@
-# Étape 1 : Utiliser l’image Java officielle
 FROM eclipse-temurin:17-jdk-alpine
-
-# Étape 2 : Créer un dossier pour l'application
 WORKDIR /app
-
-# Étape 3 : Copier le jar dans l’image
 COPY target/notification-service-*.jar app.jar
-
-# Étape 4 : Exposer le port (si tu as un port spécifique)
-EXPOSE 8085
-
-# Étape 5 : Commande de lancement
+EXPOSE 8095
 ENTRYPOINT ["java", "-jar", "app.jar"]
