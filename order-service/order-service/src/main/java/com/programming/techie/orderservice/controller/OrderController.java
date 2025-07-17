@@ -8,19 +8,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JCircuitBreaker;
 import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JCircuitBreakerFactory;
+import org.springframework.cloud.client.circuitbreaker.CircuitBreaker;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Supplier;
 
 @RestController
 @RequestMapping("/api/order")
@@ -37,17 +37,17 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<String> placeOrder(@RequestBody OrderDto orderDto) {
-        circuitBreakerFactory.configureExecutorService(traceableExecutorService);
-        Resilience4JCircuitBreaker circuitBreaker = circuitBreakerFactory.create("inventory");
-        java.util.function.Supplier<Boolean> booleanSupplier = () -> orderDto.getOrderLineItemsList().stream()
+
+        boolean productsInStock = orderDto.getOrderLineItemsList().stream()
                 .allMatch(lineItem -> {
                     log.info("Calling Inventory Service for SkuCode {}", lineItem.getSkuCode());
-                    return inventoryClient.checkStock(lineItem.getSkuCode());
+                    try {
+                        return inventoryClient.checkStock(lineItem.getSkuCode());
+                    } catch (Exception e) {
+                        log.error("Inventory service call failed for sku: " + lineItem.getSkuCode(), e);
+                        return false; // Fail fast on exception
+                    }
                 });
-        boolean productsInStock = circuitBreaker.run(booleanSupplier, throwable -> {
-            log.error("Inventory service call failed", throwable);
-            return false;
-        });
 
         if (productsInStock) {
             Order order = new Order();
@@ -56,7 +56,10 @@ public class OrderController {
 
             orderRepository.save(order);
             log.info("Order placed with id {}", order.getId());
-            streamBridge.send("notificationEventSupplier-out-0", MessageBuilder.withPayload(order.getId()).build());
+
+            streamBridge.send("notificationEventSupplier-out-0",
+                    MessageBuilder.withPayload(order.getId()).build());
+
             return ResponseEntity.ok("Order placed successfully");
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -64,6 +67,11 @@ public class OrderController {
         }
     }
 
+
+    @GetMapping
+    ResponseEntity<List<Order>> getAllOrders() {
+        return ResponseEntity.ok(orderRepository.findAll());
+    }
     private Boolean handleErrorCase() {
         return false;
     }

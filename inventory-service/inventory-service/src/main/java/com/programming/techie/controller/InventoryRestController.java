@@ -5,10 +5,9 @@ import com.programming.techie.repository.InventoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/inventory")
@@ -25,7 +24,17 @@ public class InventoryRestController {
                 .map(inventory -> ResponseEntity.ok(inventory.getStock() > 0))
                 .orElseGet(() -> {
                     log.error("Product not found with skuCode: {}", skuCode);
-                    return ResponseEntity.notFound().build();
+                    return ResponseEntity.ok(false);
                 });
+    }
+    @GetMapping
+    public ResponseEntity<List<Inventory>> getAllInventory() {
+        return ResponseEntity.ok(inventoryRepository.findAll());
+    }
+
+    @PostMapping
+    public  ResponseEntity<Inventory> createItem(@RequestBody Inventory item) {
+        Inventory itemCreated = inventoryRepository.save(item);
+        return  ResponseEntity.ok(itemCreated);
     }
 }
