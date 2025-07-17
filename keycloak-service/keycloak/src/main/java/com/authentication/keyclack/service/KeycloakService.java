@@ -3,6 +3,7 @@ package com.authentication.keyclack.service;
 import com.authentication.keyclack.DTO.LoginRequest;
 import com.authentication.keyclack.DTO.LogoutRequest;
 import com.authentication.keyclack.DTO.RegisterRequest;
+import com.authentication.keyclack.DTO.UpdateRequest;
 import com.authentication.keyclack.configuration.KeyCloakConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -33,33 +34,29 @@ public class KeycloakService {
 
     public ResponseEntity<?> login(LoginRequest request) throws JsonProcessingException {
         String tokenUrl = config.getUrl() + "/realms/" + config.getRealm() + "/protocol/openid-connect/token";
-        log.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA "+tokenUrl);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type", "password");
-            body.add("client_id", config.getClientId());
+        body.add("client_id", config.getClientId());
         body.add("client_secret", config.getClientSecret());
         body.add("username", request.getUsername());
         body.add("password", request.getPassword());
-        body.add("scope","openid");
+        body.add("scope", "openid");
 
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(body, headers);
 
         try {
-            log.info("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC");
             ResponseEntity<String> response = restTemplate.postForEntity(tokenUrl, entity, String.class);
             return ResponseEntity.ok(new ObjectMapper().readTree(response.getBody()));
         } catch (HttpClientErrorException e) {
-            log.info("BBBBBBBBBBBBBBBBBBBBBBBBBBB"+e.getMessage()+" "+e.getResponseBodyAsString());
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         } catch (RestClientException e) {
-        log.error("RestClientException occurred", e);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Keycloak server error");
-    }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Keycloak server error");
+        }
 
-}
+    }
 
     private String getAdminAccessToken() throws JsonProcessingException {
         String tokenUrl = config.getUrl() + "/realms/" + config.getRealm() + "/protocol/openid-connect/token";
@@ -79,6 +76,7 @@ public class KeycloakService {
 
         return tokenResponse.get("access_token").asText();
     }
+
     private boolean userExists(String username) throws JsonProcessingException {
         // First get admin token (client credentials)
         String adminToken = getAdminAccessToken();
@@ -101,6 +99,7 @@ public class KeycloakService {
             return false;
         }
     }
+
     public ResponseEntity<?> logout(LogoutRequest request) {
         String logoutUrl = config.getUrl() + "/realms/" + config.getRealm() + "/protocol/openid-connect/logout";
 
@@ -191,7 +190,7 @@ public class KeycloakService {
 
             Map<String, Object> profilePayload = new HashMap<>();
             profilePayload.put("externalId", keycloakId);
-            profilePayload.put("birthDate", request.getUsername()); // NOTE: double-check if this is correct
+            profilePayload.put("birthDate", request.getBirthDate()); // NOTE: double-check if this is correct
             profilePayload.put("email", request.getEmail());
             profilePayload.put("firstName", request.getFirstName());
             profilePayload.put("lastName", request.getLastName());
@@ -200,7 +199,6 @@ public class KeycloakService {
             ResponseEntity<String> profileResponse = restTemplate.postForEntity(userProfileUrl, profileRequest, String.class);
 
             if (!profileResponse.getStatusCode().is2xxSuccessful()) {
-                // ❌ If UserProfile fails, delete Keycloak user
                 String deleteUrl = userUrl + "/" + keycloakId;
                 restTemplate.exchange(deleteUrl, HttpMethod.DELETE, new HttpEntity<>(userHeaders), Void.class);
 
@@ -217,6 +215,36 @@ public class KeycloakService {
         }
     }
 
+    public ResponseEntity<?> updateUserProfile(UpdateRequest request) {
+        try {
+            String token = getAdminAccessToken();
 
+            String userId = request.getExternalId();
+            String keycloakUserUrl = config.getUrl() + "/admin/realms/" + config.getRealm() + "/users/" + userId;
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setBearerAuth(token);
+
+            Map<String, Object> keycloakUserUpdate = new HashMap<>();
+            keycloakUserUpdate.put("firstName", request.getFirstName());
+            keycloakUserUpdate.put("lastName", request.getLastName());
+            keycloakUserUpdate.put("email", request.getEmail());
+
+            HttpEntity<Map<String, Object>> userRequest = new HttpEntity<>(keycloakUserUpdate, headers);
+            restTemplate.exchange(keycloakUserUrl, HttpMethod.PUT, userRequest, Void.class);
+
+            // Step 2: Update UserProfile MS
+            String profileUpdateUrl = "http://user-profile-service:8091/api/user/update";
+            HttpEntity<UpdateRequest> profileRequest = new HttpEntity<>(request, headers);
+            restTemplate.exchange(profileUpdateUrl, HttpMethod.PUT, profileRequest, Void.class);
+
+            return ResponseEntity.ok("Profile updated successfully");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to update profile: " + e.getMessage());
+        }
+    }
 }
 
