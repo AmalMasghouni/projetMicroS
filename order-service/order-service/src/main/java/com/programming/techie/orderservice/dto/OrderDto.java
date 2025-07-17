@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
 import java.util.List;
 
 @Data
@@ -13,5 +15,5 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class OrderDto {
-    private List<OrderLineItems> orderLineItemsList;
-}
+    @NotEmpty(message = "Order must have at least one item")
+    private List<@Valid OrderLineItems> orderLineItemsList;}

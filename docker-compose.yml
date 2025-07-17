@@ -32,6 +32,8 @@ services:
       - mysql-data:/var/lib/mysql
     networks:
       - ms-network
+
+
     # pas de ports exposés pour éviter conflit
 
   rabbitmq:
@@ -229,7 +231,7 @@ services:
     build: ./api-gateway-service/api-gateway-service
     container_name: api-gateway-service
     ports:
-      - "8080:8080"
+      - "8090:8080"
     environment:
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/Authentication
       - JAVA_TOOL_OPTIONS=-Deureka.client.service-url.defaultZone=http://discovery-server:8761/eureka/
