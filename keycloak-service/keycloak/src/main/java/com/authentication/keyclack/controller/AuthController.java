@@ -8,13 +8,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import com.authentication.keyclack.service.KeycloakService;
 
 import java.util.Map;
+
 
 @Slf4j
 @RestController
@@ -33,6 +31,29 @@ public class AuthController {
                     .body(Map.of("error", "Internal server error"));
         }
     }
+
+    @GetMapping("/user-email")
+    public ResponseEntity<?> getUserEmail(@RequestBody LoginRequest request) {
+       /* String email = jwt.getClaimAsString("email");
+
+        return ResponseEntity.ok(Map.of("email", email));*/
+        try {
+            return keycloakService.loginAndGetEmail(request);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Internal server error"));
+        }
+    }
+
+    /*@GetMapping("/userEmailll")
+    public ResponseEntity<?> getUserEmaillll(Authentication authentication) {
+      Jwt jwt=(Jwt) authentication.getPrincipal();
+      String email=jwt.getClaim("email");
+      return ResponseEntity.ok(email);
+
+    }*/
+
+
 
     @PostMapping("/test")
     public ResponseEntity<?> test(@RequestBody LoginRequest request) throws JsonProcessingException {

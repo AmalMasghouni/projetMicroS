@@ -18,6 +18,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +80,49 @@ public class KeycloakService {
 
         return tokenResponse.get("access_token").asText();
     }
+    public ResponseEntity<?> loginAndGetEmail(LoginRequest request) {
+        String tokenUrl ="http://localhost:8180/realms/" + config.getRealm() + "/protocol/openid-connect/token";
+        log.info("Token URL: " + tokenUrl);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "password");
+        body.add("client_id", config.getClientId());
+        body.add("client_secret", config.getClientSecret());
+        body.add("username", request.getUsername());
+        body.add("password", request.getPassword());
+        body.add("scope", "openid");
+
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(body, headers);
+
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(tokenUrl, entity, String.class);
+            JsonNode tokenResponse = new ObjectMapper().readTree(response.getBody());
+
+            String token = tokenResponse.get("access_token").asText();
+
+            // 🔍 Décoder le token et récupérer l'email
+            /*SignedJWT jwt = SignedJWT.parse(token);
+            String email = (String) jwt.getJWTClaimsSet().getClaim("email");
+*/
+            return ResponseEntity.ok(Map.of(
+                    "email", "hello",
+                    "access_token", token
+            ));
+
+        } catch (HttpClientErrorException e) {
+            log.warn("Keycloak error: {}", e.getResponseBodyAsString());
+            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
+
+        } catch (Exception e) {
+            log.error("Internal error", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Internal server error", "details", e.getMessage()));
+        }
+    }
+
     private boolean userExists(String username) throws JsonProcessingException {
         // First get admin token (client credentials)
         String adminToken = getAdminAccessToken();
