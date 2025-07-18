@@ -12,6 +12,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/product")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class ProductController {
 
     private final ProductRepository productRepository;
@@ -24,6 +25,7 @@ public class ProductController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
     public void createProduct(@RequestBody Product product) {
         productRepository.save(product);
     }
