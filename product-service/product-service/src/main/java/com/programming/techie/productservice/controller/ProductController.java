@@ -46,5 +46,15 @@ public class ProductController {
                 .map(product -> ResponseEntity.ok(product))
                 .orElse(ResponseEntity.notFound().build());
     }
+    @GetMapping("/by-name/{name}")
+    public ResponseEntity<Product> findByName(@PathVariable String name) {
+        List<Product> products = productRepository.findByName(name);
+        if (products != null && !products.isEmpty()) {
+            return new ResponseEntity<>(products.get(0), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
 
 }

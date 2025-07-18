@@ -8,6 +8,11 @@
     </remote-repository>
     <remote-repository>
       <option name="id" value="spring-milestones" />
+      <option name="name" value="Spring Milestone Repository" />
+      <option name="url" value="https://repo.spring.io/milestone" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="spring-milestones" />
       <option name="name" value="Spring Milestones" />
       <option name="url" value="https://repo.spring.io/milestone" />
     </remote-repository>
